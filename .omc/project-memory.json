@@ -139,6 +139,115 @@
       ]
     }
   },
-  "hotPaths": [],
+  "hotPaths": [
+    {
+      "path": "ui\\components\\Navbar.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1774956860263,
+      "type": "file"
+    },
+    {
+      "path": "features\\stock-recommendation\\infrastructure\\api\\marketAnalysisApi.ts",
+      "accessCount": 3,
+      "lastAccessed": 1774957779027,
+      "type": "file"
+    },
+    {
+      "path": "features\\stock-recommendation\\ui\\components\\StockQuestionForm.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1774957536589,
+      "type": "file"
+    },
+    {
+      "path": "ui\\layout\\AppLayout.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1774955306804,
+      "type": "file"
+    },
+    {
+      "path": "ui\\components\\navbar\\navbarStyles.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774955307215,
+      "type": "file"
+    },
+    {
+      "path": "app\\stock\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1774955413009,
+      "type": "file"
+    },
+    {
+      "path": "ui\\components\\TextField.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1774956840871,
+      "type": "file"
+    },
+    {
+      "path": "app\\stock-recommendation\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1774956856171,
+      "type": "file"
+    },
+    {
+      "path": "features\\auth\\application\\hooks\\useAuth.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774957491517,
+      "type": "file"
+    },
+    {
+      "path": "features\\auth\\application\\selectors\\authSelectors.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774957492017,
+      "type": "file"
+    },
+    {
+      "path": "infrastructure\\http\\httpClient.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774957492532,
+      "type": "file"
+    },
+    {
+      "path": "features\\auth\\application\\hooks\\useTermsAccess.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774957496762,
+      "type": "file"
+    },
+    {
+      "path": "features\\auth\\application\\atoms\\authAtom.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774957497666,
+      "type": "file"
+    },
+    {
+      "path": "features\\auth\\domain\\state\\authState.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774957504660,
+      "type": "file"
+    },
+    {
+      "path": "features\\stock-recommendation\\domain\\model\\marketAnalysis.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774957512008,
+      "type": "file"
+    },
+    {
+      "path": "features\\stock-recommendation\\application\\hooks\\useStockRecommendation.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774957524914,
+      "type": "file"
+    },
+    {
+      "path": "infrastructure\\config\\env.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774957610343,
+      "type": "file"
+    },
+    {
+      "path": "infrastructure\\http\\apiResponse.ts",
+      "accessCount": 1,
+      "lastAccessed": 1774957767774,
+      "type": "file"
+    }
+  ],
   "userDirectives": []
 }

@@ -6,8 +6,9 @@ import { navbarStyles } from "@/ui/components/navbar/navbarStyles";
 
 const menuItems = [
   { label: "Home", href: "/" },
-  { label: "게시판", href: "/board" },
-  { label: "영상 피드", href: "/youtube" },
+  { label: "Board", href: "/board" },
+  { label: "Youtube", href: "/youtube" },
+  { label: "주식 추천", href: "/stock-recommendation" },
 ];
 
 interface NavbarProps {
