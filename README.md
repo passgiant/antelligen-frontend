@@ -1,5 +1,5 @@
 # stock-supporters-frontend
-stock-supporters-frontend
+stock-supporters-frontend!
 
 # How to create project?
 npx create-next-app@latest stock-supporters-frontend
