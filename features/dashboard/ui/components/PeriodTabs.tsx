@@ -1,4 +1,4 @@
-import type { Period } from "@/features/dashboard/infrastructure/api/nasdaqApi";
+import type { Period } from "@/features/dashboard/domain/model/period";
 
 const PERIODS: Period[] = ["1D", "1W", "1M", "1Y"];
 
