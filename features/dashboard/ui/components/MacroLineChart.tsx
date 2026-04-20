@@ -75,8 +75,8 @@ export default function MacroLineChart({
               fontSize: "12px",
               color: "#f4f4f5",
             }}
-            formatter={(value: number) => [`${value}${unit}`, title]}
-            labelFormatter={(label: string) => label}
+            formatter={(value) => [`${value}${unit}`, title]}
+            labelFormatter={(label) => label}
           />
           <Line
             type="monotone"

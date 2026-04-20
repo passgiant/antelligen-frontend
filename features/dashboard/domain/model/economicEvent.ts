@@ -7,5 +7,5 @@ export interface EconomicEvent {
   date: string; // "yyyy-mm-dd"
   value: number;
   previous: number;
-  forecast: number;
+  forecast: number | null;
 }

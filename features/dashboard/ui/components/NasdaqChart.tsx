@@ -12,21 +12,21 @@ import {
   type CandlestickData,
   type SeriesMarker,
   type Time,
+  type MouseEventParams,
 } from "lightweight-charts";
 import { nasdaqAtom } from "@/features/dashboard/application/atoms/nasdaqAtom";
 import { economicEventAtom, selectedEventAtom } from "@/features/dashboard/application/atoms/economicEventAtom";
+import { timelineAtom, selectedTimelineEventAtom } from "@/features/dashboard/application/atoms/timelineAtom";
+import { selectedBarTimeAtom } from "@/features/dashboard/application/atoms/selectedBarAtom";
 import { periodAtom } from "@/features/dashboard/application/atoms/periodAtom";
+import { tickerAtom } from "@/features/dashboard/application/atoms/tickerAtom";
+import { companyNameAtom } from "@/features/dashboard/application/atoms/companyNameAtom";
 import { chartApiAtom, chartContainerAtom } from "@/features/dashboard/application/atoms/chartApiAtom";
 import { useNasdaqChart } from "@/features/dashboard/application/hooks/useNasdaqChart";
 import ChartSkeleton from "@/features/dashboard/ui/components/skeletons/ChartSkeleton";
 import PeriodTabs from "@/features/dashboard/ui/components/PeriodTabs";
-import type { EconomicEventType } from "@/features/dashboard/domain/model/economicEvent";
 
-const MARKER_COLOR: Record<EconomicEventType, string> = {
-  CPI:           "#f59e0b",
-  INTEREST_RATE: "#3b82f6",
-  UNEMPLOYMENT:  "#10b981",
-};
+const MARKER_COLOR_SELECTED = "#a855f7";
 
 export default function NasdaqChart() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,11 +36,88 @@ export default function NasdaqChart() {
 
   const nasdaqState = useAtomValue(nasdaqAtom);
   const economicEventState = useAtomValue(economicEventAtom);
-  const selectedEvent = useAtomValue(selectedEventAtom);
+  const timelineState = useAtomValue(timelineAtom);
+  const selectedBarTime = useAtomValue(selectedBarTimeAtom);
   const period = useAtomValue(periodAtom);
+  const ticker = useAtomValue(tickerAtom);
+  const companyName = useAtomValue(companyNameAtom);
   const { setPeriod } = useNasdaqChart();
   const setChartApi = useSetAtom(chartApiAtom);
   const setChartContainer = useSetAtom(chartContainerAtom);
+  const setSelectedEvent = useSetAtom(selectedEventAtom);
+  const setSelectedTimelineEvent = useSetAtom(selectedTimelineEventAtom);
+  const setSelectedBarTime = useSetAtom(selectedBarTimeAtom);
+
+  // period 변경 시 경제지표 선택 초기화 (history 선택은 유지)
+  useEffect(() => {
+    setSelectedBarTime(null);
+    setSelectedEvent(null);
+  }, [period, setSelectedBarTime, setSelectedEvent]);
+
+  // ticker 변경 시 모든 선택 초기화
+  useEffect(() => {
+    setSelectedBarTime(null);
+    setSelectedEvent(null);
+    setSelectedTimelineEvent(null);
+  }, [ticker, setSelectedBarTime, setSelectedEvent, setSelectedTimelineEvent]);
+
+  // 마커 클릭 핸들러 — 최신 상태를 참조하도록 ref로 관리
+  const clickHandlerRef = useRef<(params: MouseEventParams<Time>) => void>(() => {});
+  useEffect(() => {
+    clickHandlerRef.current = (params) => {
+      if (!params.time) return;
+
+      const clickedTime = String(params.time);
+
+      // 같은 봉 재클릭 시 선택 해제
+      if (selectedBarTime === clickedTime) {
+        setSelectedBarTime(null);
+        setSelectedEvent(null);
+        setSelectedTimelineEvent(null);
+        return;
+      }
+
+      const bars = nasdaqState.status === "SUCCESS" ? nasdaqState.bars : [];
+      const toNearestBarTime = (eventDate: string): string => {
+        if (bars.length === 0) return eventDate;
+        const ts = new Date(eventDate).getTime();
+        return bars.reduce((nearest, bar) => {
+          const diff = Math.abs(new Date(bar.time).getTime() - ts);
+          const nearestDiff = Math.abs(new Date(nearest.time).getTime() - ts);
+          return diff < nearestDiff ? bar : nearest;
+        }).time;
+      };
+
+      // History 이벤트 매칭 (1D일 때)
+      if (timelineState.status === "SUCCESS" && timelineState.events.length > 0) {
+        const matchedIdx = timelineState.events.findIndex(
+          (e) => toNearestBarTime(e.date) === clickedTime
+        );
+        if (matchedIdx !== -1) {
+          setSelectedTimelineEvent({ idx: matchedIdx, event: timelineState.events[matchedIdx] });
+          setSelectedBarTime(clickedTime);
+          setSelectedEvent(null);
+          return;
+        }
+        // 매칭되는 History 이벤트 없음 → 선택 해제
+        setSelectedTimelineEvent(null);
+        setSelectedBarTime(null);
+        return;
+      }
+
+      setSelectedBarTime(clickedTime);
+
+      // 경제지표 이벤트 매칭
+      if (economicEventState.status === "SUCCESS") {
+        const matched = economicEventState.events.filter(
+          (e) => toNearestBarTime(e.date) === clickedTime
+        );
+        setSelectedEvent(matched.length > 0 ? matched[0] : null);
+      } else {
+        setSelectedEvent(null);
+      }
+    };
+  }, [selectedBarTime, economicEventState, timelineState, nasdaqState, setSelectedBarTime, setSelectedEvent, setSelectedTimelineEvent]);
 
   // 차트 초기화 + 캔들스틱 데이터 바인딩
   useEffect(() => {
@@ -52,23 +129,24 @@ export default function NasdaqChart() {
         textColor: "#71717a",
       },
       grid: {
-        vertLines: { color: "#27272a" },
-        horzLines: { color: "#27272a" },
+        vertLines: { visible: false },
+        horzLines: { visible: false },
       },
       crosshair: { mode: 1 },
+      localization: { dateFormat: "yyyy-MM-dd" },
       rightPriceScale: { borderColor: "#3f3f46" },
-      timeScale: { borderColor: "#3f3f46", timeVisible: true },
+      timeScale: { borderColor: "#3f3f46", timeVisible: false },
       width: containerRef.current.clientWidth,
       height: 320,
     });
 
     const series = chart.addSeries(CandlestickSeries, {
-      upColor: "#3b82f6",
-      downColor: "#ef4444",
-      borderUpColor: "#3b82f6",
-      borderDownColor: "#ef4444",
-      wickUpColor: "#3b82f6",
-      wickDownColor: "#ef4444",
+      upColor: "#ef4444",
+      downColor: "#3b82f6",
+      borderUpColor: "#ef4444",
+      borderDownColor: "#3b82f6",
+      wickUpColor: "#ef4444",
+      wickDownColor: "#3b82f6",
     });
 
     const data: CandlestickData<Time>[] = nasdaqState.bars.map((bar) => ({
@@ -87,6 +165,9 @@ export default function NasdaqChart() {
     setChartApi(chart);
     setChartContainer(containerRef.current);
 
+    const clickHandler = (params: MouseEventParams<Time>) => clickHandlerRef.current(params);
+    chart.subscribeClick(clickHandler);
+
     const observer = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect.width;
       if (width) chart.applyOptions({ width });
@@ -104,43 +185,37 @@ export default function NasdaqChart() {
     };
   }, [nasdaqState, setChartApi, setChartContainer]);
 
-  // 마커 바인딩 — 1D는 분봉(Unix timestamp)이라 일자 마커 미지원으로 스킵
+  // 마커 바인딩 — 선택된 bar에만 마커 표시 (연봉 제외)
   useEffect(() => {
-    if (!markersRef.current || economicEventState.status !== "SUCCESS" || period === "1D") return;
+    if (!markersRef.current) return;
+    if (period === "1Y" || !selectedBarTime) {
+      markersRef.current.setMarkers([]);
+      return;
+    }
+    markersRef.current.setMarkers([{
+      time: selectedBarTime as Time,
+      position: "aboveBar" as const,
+      shape: "circle" as const,
+      color: MARKER_COLOR_SELECTED,
+      size: 1,
+    }]);
+  }, [selectedBarTime, period]);
 
-    const markers: SeriesMarker<Time>[] = economicEventState.events
-      .map((event) => ({
-        time: event.date as Time,
-        position: "aboveBar" as const,
-        shape: "circle" as const,
-        color: MARKER_COLOR[event.type],
-        text: `${event.label} ${event.value}%`,
-        size: selectedEvent?.id === event.id ? 2 : 1,
-      }))
-      .sort((a, b) => String(a.time).localeCompare(String(b.time)));
-
-    markersRef.current.setMarkers(markers);
-  }, [economicEventState, selectedEvent, period, nasdaqState]);
-
-  // 선택된 이벤트로 차트 스크롤
+  // 패널 선택 시 해당 bar로 차트 스크롤 — bar 인덱스 기준으로 가운데 정렬
   useEffect(() => {
-    if (!selectedEvent || !chartRef.current || period === "1D") return;
+    if (!selectedBarTime || !chartRef.current) return;
+    if (nasdaqState.status !== "SUCCESS" || nasdaqState.bars.length === 0) return;
 
-    const eventDate = new Date(selectedEvent.date);
-    const from = new Date(eventDate);
-    from.setMonth(from.getMonth() - 1);
-    const to = new Date(eventDate);
-    to.setMonth(to.getMonth() + 1);
+    const bars = nasdaqState.bars;
+    const idx = bars.findIndex((b) => b.time === selectedBarTime);
+    if (idx === -1) return;
 
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const fmt = (d: Date) =>
-      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-    chartRef.current.timeScale().setVisibleRange({
-      from: fmt(from) as Time,
-      to: fmt(to) as Time,
+    const half = period === "1D" ? 30 : period === "1W" ? 13 : period === "1M" ? 6 : 3;
+    chartRef.current.timeScale().setVisibleLogicalRange({
+      from: idx - half,
+      to: idx + half,
     });
-  }, [selectedEvent, period]);
+  }, [selectedBarTime, period, nasdaqState]);
 
   if (nasdaqState.status === "LOADING") {
     return <ChartSkeleton />;
@@ -157,23 +232,13 @@ export default function NasdaqChart() {
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-            NASDAQ Composite
-          </h2>
-          {period !== "1D" && (
-            <div className="flex items-center gap-2 text-xs text-zinc-400">
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />CPI
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />금리
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />실업률
-              </span>
-            </div>
-          )}
+        <div className="flex items-baseline gap-2">
+          <span className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+            {ticker ?? "IXIC"}
+          </span>
+          <span className="text-xs text-zinc-400">
+            {companyName ?? "NASDAQ Composite"}
+          </span>
         </div>
         <PeriodTabs selected={period} onChange={setPeriod} />
       </div>
