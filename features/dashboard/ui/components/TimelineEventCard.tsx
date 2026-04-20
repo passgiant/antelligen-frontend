@@ -14,15 +14,19 @@ interface Props {
   eventIdx: number;
   isLast?: boolean;
   isSelected?: boolean;
+  cardRef?: (el: HTMLDivElement | null) => void;
+  titleOverride?: string | null;
+  isTitleLoading?: boolean;
   onClick?: (idx: number, event: TimelineEvent) => void;
 }
 
-export default function TimelineEventCard({ event, eventIdx, isLast = false, isSelected = false, onClick }: Props) {
+export default function TimelineEventCard({ event, eventIdx, isLast = false, isSelected = false, cardRef, titleOverride, isTitleLoading = false, onClick }: Props) {
   const [causalityOpen, setCausalityOpen] = useState(false);
   const style = CATEGORY_STYLE[event.category];
 
   return (
     <div
+      ref={cardRef}
       className="relative flex gap-3"
       data-history-event-id={eventIdx}
       onClick={() => onClick?.(eventIdx, event)}
@@ -47,9 +51,13 @@ export default function TimelineEventCard({ event, eventIdx, isLast = false, isS
         </div>
 
         {/* 타이틀 */}
-        <p className="mb-1 text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-          {event.title}
-        </p>
+        {isTitleLoading ? (
+          <div className="mb-1 h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700" />
+        ) : (
+          <p className={`mb-1 text-sm font-semibold text-zinc-800 dark:text-zinc-100 ${titleOverride != null ? "animate-title-fade-in" : ""}`}>
+            {titleOverride ?? event.title}
+          </p>
+        )}
 
         {/* 상세 내용 */}
         <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">

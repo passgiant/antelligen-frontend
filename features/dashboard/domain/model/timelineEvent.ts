@@ -21,4 +21,5 @@ export interface TimelineResponse {
   period: string;
   count: number;
   events: TimelineEvent[];
+  is_etf: boolean;
 }

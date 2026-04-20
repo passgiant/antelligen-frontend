@@ -5,13 +5,15 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { tickerAtom } from "@/features/dashboard/application/atoms/tickerAtom";
 import { periodAtom } from "@/features/dashboard/application/atoms/periodAtom";
 import { timelineAtom } from "@/features/dashboard/application/atoms/timelineAtom";
-import { fetchTimeline } from "@/features/dashboard/infrastructure/api/timelineApi";
+import { streamTimeline } from "@/features/dashboard/infrastructure/api/timelineApi";
+import { enrichTitlesAtom } from "@/features/history/application/historyAtoms";
 
 export function useTimeline() {
   const ticker = useAtomValue(tickerAtom);
   const period = useAtomValue(periodAtom);
   const periodRef = useRef(period);
   const setTimeline = useSetAtom(timelineAtom);
+  const enrichTitles = useAtomValue(enrichTitlesAtom);
 
   useEffect(() => {
     periodRef.current = period;
@@ -23,10 +25,26 @@ export function useTimeline() {
     setTimeline({ status: "LOADING" });
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120_000);
+    const timeoutId = setTimeout(() => controller.abort(), 300_000);
 
-    fetchTimeline(effectiveTicker, periodRef.current, controller.signal)
+    streamTimeline(
+      effectiveTicker,
+      periodRef.current,
+      (progress) => {
+        setTimeline({ status: "LOADING_WITH_PROGRESS", progress });
+      },
+      controller.signal,
+      enrichTitles,
+    )
       .then((data) => {
+        if (data.is_etf) {
+          setTimeline({
+            status: "ETF",
+            ticker: data.ticker,
+            period: data.period,
+          });
+          return;
+        }
         setTimeline({
           status: "SUCCESS",
           events: data.events,
@@ -46,5 +64,5 @@ export function useTimeline() {
       controller.abort();
       clearTimeout(timeoutId);
     };
-  }, [ticker, setTimeline]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ticker, enrichTitles, setTimeline]); // eslint-disable-line react-hooks/exhaustive-deps
 }

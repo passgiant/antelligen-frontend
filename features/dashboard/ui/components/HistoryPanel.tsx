@@ -7,7 +7,9 @@ import { economicEventAtom, selectedEventAtom } from "@/features/dashboard/appli
 import { nasdaqAtom } from "@/features/dashboard/application/atoms/nasdaqAtom";
 import { periodAtom } from "@/features/dashboard/application/atoms/periodAtom";
 import { useTimeline } from "@/features/dashboard/application/hooks/useTimeline";
-import TimelineEventCard from "@/features/dashboard/ui/components/TimelineEventCard";
+import LazyTimelineEventCard from "@/features/history/ui/components/LazyTimelineEventCard";
+import { useLazyTitles } from "@/features/history/application/useLazyTitles";
+import { enrichTitlesAtom } from "@/features/history/application/historyAtoms";
 import type { TimelineEvent } from "@/features/dashboard/domain/model/timelineEvent";
 import { useEffect, useRef } from "react";
 
@@ -34,10 +36,34 @@ function HistorySkeleton() {
   );
 }
 
+function HistoryProgress({ pct, label }: { pct: number; label: string }) {
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+          <span>{label}</span>
+          <span>{pct}%</span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+          <div
+            className="h-full rounded-full bg-blue-500 transition-all duration-500 ease-out"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+      <HistorySkeleton />
+    </div>
+  );
+}
+
 export default function HistoryPanel() {
   useTimeline();
 
   const timelineState = useAtomValue(timelineAtom);
+  const lazyEvents = timelineState.status === "SUCCESS" ? timelineState.events : [];
+  const lazyTicker = timelineState.status === "SUCCESS" ? timelineState.ticker : "";
+  const lazyPeriod = timelineState.status === "SUCCESS" ? timelineState.period : "";
+  const { getCardRef } = useLazyTitles({ events: lazyEvents, ticker: lazyTicker, period: lazyPeriod });
   const nasdaqState = useAtomValue(nasdaqAtom);
   const economicEventState = useAtomValue(economicEventAtom);
   const [selectedTimelineEvent, setSelectedTimelineEvent] = useAtom(selectedTimelineEventAtom);
@@ -45,6 +71,7 @@ export default function HistoryPanel() {
   const setSelectedEvent = useSetAtom(selectedEventAtom);
   const setPeriod = useSetAtom(periodAtom);
   const period = useAtomValue(periodAtom);
+  const [enrichTitles, setEnrichTitles] = useAtom(enrichTitlesAtom);
 
   // 1D가 아닌 period로 변경되면 선택 초기화
   useEffect(() => {
@@ -122,13 +149,42 @@ export default function HistoryPanel() {
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-      <h3 className="mb-4 text-sm font-semibold text-zinc-700 dark:text-zinc-300">History</h3>
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">History</h3>
+        <button
+          onClick={() => setEnrichTitles((v) => !v)}
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+            enrichTitles
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
+              : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+          }`}
+          title={enrichTitles ? "AI 타이틀 전체 생성 중 (느림)" : "AI 타이틀 지연 로딩 중 (빠름)"}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${enrichTitles ? "bg-blue-500" : "bg-zinc-400"}`} />
+          {enrichTitles ? "전체 AI 타이틀" : "빠른 로드"}
+        </button>
+      </div>
 
       {timelineState.status === "IDLE" && (
         <p className="text-sm text-zinc-400">데이터를 불러오는 중입니다.</p>
       )}
 
       {timelineState.status === "LOADING" && <HistorySkeleton />}
+
+      {timelineState.status === "LOADING_WITH_PROGRESS" && (
+        <HistoryProgress pct={timelineState.progress.pct} label={timelineState.progress.label} />
+      )}
+
+      {timelineState.status === "ETF" && (
+        <div className="flex h-24 flex-col items-center justify-center gap-1">
+          <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+            ETF는 타임라인을 제공하지 않습니다.
+          </p>
+          <p className="text-xs text-zinc-400">
+            개별 종목을 선택하면 주요 이벤트를 확인할 수 있습니다.
+          </p>
+        </div>
+      )}
 
       {timelineState.status === "ERROR" && (
         <div className="flex h-24 items-center justify-center">
@@ -145,12 +201,14 @@ export default function HistoryPanel() {
       {timelineState.status === "SUCCESS" && timelineState.events.length > 0 && (
         <div ref={scrollRef} className="max-h-96 overflow-y-auto pr-1 [scrollbar-width:thin] [scrollbar-color:theme(colors.zinc.300)_transparent] dark:[scrollbar-color:theme(colors.zinc.700)_transparent]">
           {timelineState.events.map((event, idx) => (
-            <TimelineEventCard
+            <LazyTimelineEventCard
               key={`${event.date}-${idx}`}
               event={event}
               eventIdx={idx}
+              eventKey={`${timelineState.ticker}:${timelineState.period}:${idx}`}
               isLast={idx === timelineState.events.length - 1}
               isSelected={selectedTimelineEvent?.idx === idx}
+              cardRef={getCardRef(idx)}
               onClick={handleClick}
             />
           ))}
