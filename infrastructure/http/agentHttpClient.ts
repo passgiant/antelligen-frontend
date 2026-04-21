@@ -13,6 +13,7 @@ export async function agentHttpClient<T>(
   const url = `${env.agentApiBaseUrl}${path}`;
 
   const response = await fetch(url, {
+    credentials: "include",
     ...options,
     headers: {
       "Content-Type": "application/json",

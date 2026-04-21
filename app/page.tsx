@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MarketRiskPanel from "@/features/dashboard/ui/components/MarketRiskPanel";
+import SchedulePanel from "@/features/dashboard/ui/components/SchedulePanel";
 
 const FEATURES = [
   {
@@ -59,6 +60,10 @@ export default function Home() {
 
           <div className="mx-auto mt-10 max-w-2xl text-left">
             <MarketRiskPanel />
+          </div>
+
+          <div className="mx-auto mt-8 max-w-2xl text-left">
+            <SchedulePanel />
           </div>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">

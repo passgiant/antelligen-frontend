@@ -76,32 +76,32 @@ interface RawHistoryItem {
 
 // ── Mappers ───────────────────────────────────────────────────────────────────
 
-function mapFinanceData(raw: RawFinanceData): FinanceData {
+function mapFinanceData(raw: RawFinanceData | null | undefined): FinanceData {
   return {
-    stockName: raw.stock_name,
-    market: raw.market,
-    currentPrice: raw.current_price,
-    roe: raw.roe,
-    roa: raw.roa,
-    debtRatio: raw.debt_ratio,
-    fiscalYear: raw.fiscal_year,
-    sales: raw.sales,
-    operatingIncome: raw.operating_income,
-    netIncome: raw.net_income,
+    stockName: raw?.stock_name ?? null,
+    market: raw?.market ?? null,
+    currentPrice: raw?.current_price ?? null,
+    roe: raw?.roe ?? null,
+    roa: raw?.roa ?? null,
+    debtRatio: raw?.debt_ratio ?? null,
+    fiscalYear: raw?.fiscal_year ?? null,
+    sales: raw?.sales ?? null,
+    operatingIncome: raw?.operating_income ?? null,
+    netIncome: raw?.net_income ?? null,
   };
 }
 
-function mapDisclosureData(raw: RawDisclosureData): DisclosureData {
+function mapDisclosureData(raw: RawDisclosureData | null | undefined): DisclosureData {
   return {
-    coreFiling: (raw.filings?.core ?? []).map((f) => ({
+    coreFiling: (raw?.filings?.core ?? []).map((f) => ({
       title: f.title,
       filedAt: f.filed_at,
       type: f.type,
     })),
     otherSummary: {
-      ownership: raw.filings?.other_summary?.ownership ?? 0,
-      unknown: raw.filings?.other_summary?.unknown ?? 0,
-      majorEvent: raw.filings?.other_summary?.major_event ?? 0,
+      ownership: raw?.filings?.other_summary?.ownership ?? 0,
+      unknown: raw?.filings?.other_summary?.unknown ?? 0,
+      majorEvent: raw?.filings?.other_summary?.major_event ?? 0,
     },
   };
 }
@@ -109,11 +109,11 @@ function mapDisclosureData(raw: RawDisclosureData): DisclosureData {
 function mapAgentResult(raw: RawAgentResult): AgentResult {
   let data: AgentResult["data"];
   if (raw.agent_name === "finance") {
-    data = mapFinanceData(raw.data as RawFinanceData);
+    data = mapFinanceData(raw.data as RawFinanceData | null);
   } else if (raw.agent_name === "disclosure") {
-    data = mapDisclosureData(raw.data as RawDisclosureData);
+    data = mapDisclosureData(raw.data as RawDisclosureData | null);
   } else {
-    data = raw.data as Record<string, unknown>;
+    data = (raw.data ?? {}) as Record<string, unknown>;
   }
 
   return {
