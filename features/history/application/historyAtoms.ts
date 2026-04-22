@@ -10,5 +10,4 @@ export const titleLoadingAtomFamily = atomFamily(
   (_key: string) => atom<boolean>(false)
 );
 
-// When true, requests full server-side LLM title enrichment instead of lazy client-side loading
-export const enrichTitlesAtom = atom<boolean>(false);
+// §18.2: enrichTitlesAtom 제거 — "빠른 로드" 토글 폐지. 항상 backend default(True) 로 LLM 타이틀 사용.

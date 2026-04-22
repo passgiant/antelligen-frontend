@@ -9,7 +9,6 @@ import { periodAtom } from "@/features/dashboard/application/atoms/periodAtom";
 import { useTimeline } from "@/features/dashboard/application/hooks/useTimeline";
 import LazyTimelineEventCard from "@/features/history/ui/components/LazyTimelineEventCard";
 import { useLazyTitles } from "@/features/history/application/useLazyTitles";
-import { enrichTitlesAtom } from "@/features/history/application/historyAtoms";
 import type { TimelineEvent } from "@/features/dashboard/domain/model/timelineEvent";
 import CategoryFilterChips, { type CategoryFilter } from "@/features/dashboard/ui/components/CategoryFilterChips";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -73,9 +72,7 @@ export default function HistoryPanel() {
   const [selectedTimelineEvent, setSelectedTimelineEvent] = useAtom(selectedTimelineEventAtom);
   const setSelectedBarTime = useSetAtom(selectedBarTimeAtom);
   const setSelectedEvent = useSetAtom(selectedEventAtom);
-  const setPeriod = useSetAtom(periodAtom);
   const period = useAtomValue(periodAtom);
-  const [enrichTitles, setEnrichTitles] = useAtom(enrichTitlesAtom);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("ALL");
 
   const categoryCounts = useMemo(() => {
@@ -91,13 +88,14 @@ export default function HistoryPanel() {
     return lazyEvents.filter((ev) => ev.category === categoryFilter);
   }, [lazyEvents, categoryFilter]);
 
-  // 1D가 아닌 period로 변경되면 선택 초기화
+  // 봉 단위(period) 변경 시 선택 초기화 — 봉 단위가 바뀌면 근접 봉 좌표가 달라지므로
+  // 이전 선택을 유지하면 SVG 연결선이 엉뚱한 봉을 가리킬 수 있다.
+  // 현재 봉 단위 유지 상태의 재선택은 정상 작동 (useEffect 미트리거).
   useEffect(() => {
-    if (period !== "1D") {
-      setSelectedTimelineEvent(null);
-      setSelectedBarTime(null);
-    }
-  }, [period, setSelectedTimelineEvent, setSelectedBarTime]);
+    setSelectedTimelineEvent(null);
+    setSelectedBarTime(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -143,7 +141,8 @@ export default function HistoryPanel() {
     }
 
     setSelectedTimelineEvent({ idx, event });
-    setPeriod("1D");
+    // §18.1: 봉 단위(period) 강제 전환 제거 — 사용자가 보고 있던 주/월/분기봉 뷰 유지.
+    // 선택된 이벤트에 대응하는 봉(selectedBarTime)은 현재 봉 단위 기준으로 근접 탐색.
 
     // 날짜가 일치하는 경제 지표 이벤트 자동 선택
     if (economicEventState.status === "SUCCESS") {
@@ -169,18 +168,6 @@ export default function HistoryPanel() {
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">History</h3>
-        <button
-          onClick={() => setEnrichTitles((v) => !v)}
-          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-            enrichTitles
-              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
-              : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-          }`}
-          title={enrichTitles ? "AI 타이틀 전체 생성 중 (느림)" : "AI 타이틀 지연 로딩 중 (빠름)"}
-        >
-          <span className={`h-1.5 w-1.5 rounded-full ${enrichTitles ? "bg-blue-500" : "bg-zinc-400"}`} />
-          {enrichTitles ? "전체 AI 타이틀" : "빠른 로드"}
-        </button>
       </div>
 
       {timelineState.status === "IDLE" && (

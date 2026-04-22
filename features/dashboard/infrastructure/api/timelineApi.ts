@@ -9,10 +9,10 @@ export async function fetchTimeline(
   ticker: string,
   period: Period,
   signal?: AbortSignal,
-  enrichTitles = true,
 ): Promise<TimelineResponse> {
+  // §18.2: enrich_titles 파라미터 생략 — backend default(True)로 항상 LLM 타이틀.
   const res = await httpClient<ApiResponse<TimelineResponse>>(
-    `/api/v1/history-agent/timeline?ticker=${encodeURIComponent(ticker)}&period=${period}&enrich_titles=${enrichTitles}`,
+    `/api/v1/history-agent/timeline?ticker=${encodeURIComponent(ticker)}&period=${period}`,
     { signal }
   );
   return res.data;
@@ -23,10 +23,10 @@ export function streamTimeline(
   period: Period,
   onProgress: (progress: TimelineProgress) => void,
   signal?: AbortSignal,
-  enrichTitles = false,
 ): Promise<TimelineResponse> {
   return new Promise((resolve, reject) => {
-    const url = `${env.apiBaseUrl}/api/v1/history-agent/timeline/stream?ticker=${encodeURIComponent(ticker)}&period=${period}&enrich_titles=${enrichTitles}`;
+    // §18.2: enrich_titles 생략 — backend default(True).
+    const url = `${env.apiBaseUrl}/api/v1/history-agent/timeline/stream?ticker=${encodeURIComponent(ticker)}&period=${period}`;
 
     fetch(url, {
       credentials: "include",
