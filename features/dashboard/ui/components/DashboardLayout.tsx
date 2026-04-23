@@ -6,6 +6,7 @@ import EventTimeline from "@/features/dashboard/ui/components/EventTimeline";
 import ConnectorOverlay from "@/features/dashboard/ui/components/ConnectorOverlay";
 import HistoryPanel from "@/features/dashboard/ui/components/HistoryPanel";
 import StockSearch from "@/features/dashboard/ui/components/StockSearch";
+import AnomalyCausalityPopup from "@/features/dashboard/ui/components/AnomalyCausalityPopup";
 
 export default function DashboardLayout() {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -32,6 +33,8 @@ export default function DashboardLayout() {
         </div>
 
       </div>
+
+      <AnomalyCausalityPopup />
     </div>
   );
 }

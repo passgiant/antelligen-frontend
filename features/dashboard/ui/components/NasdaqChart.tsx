@@ -18,6 +18,7 @@ import { nasdaqAtom } from "@/features/dashboard/application/atoms/nasdaqAtom";
 import { economicEventAtom, selectedEventAtom } from "@/features/dashboard/application/atoms/economicEventAtom";
 import { timelineAtom, selectedTimelineEventAtom } from "@/features/dashboard/application/atoms/timelineAtom";
 import { selectedBarTimeAtom } from "@/features/dashboard/application/atoms/selectedBarAtom";
+import { selectedAnomalyBarAtom } from "@/features/dashboard/application/atoms/selectedAnomalyBarAtom";
 import { periodAtom } from "@/features/dashboard/application/atoms/periodAtom";
 import { tickerAtom } from "@/features/dashboard/application/atoms/tickerAtom";
 import { companyNameAtom } from "@/features/dashboard/application/atoms/companyNameAtom";
@@ -55,19 +56,22 @@ export default function NasdaqChart() {
   const setSelectedEvent = useSetAtom(selectedEventAtom);
   const setSelectedTimelineEvent = useSetAtom(selectedTimelineEventAtom);
   const setSelectedBarTime = useSetAtom(selectedBarTimeAtom);
+  const setSelectedAnomalyBar = useSetAtom(selectedAnomalyBarAtom);
 
   // period 변경 시 경제지표 선택 초기화 (history 선택은 유지)
   useEffect(() => {
     setSelectedBarTime(null);
     setSelectedEvent(null);
-  }, [period, setSelectedBarTime, setSelectedEvent]);
+    setSelectedAnomalyBar(null);
+  }, [period, setSelectedBarTime, setSelectedEvent, setSelectedAnomalyBar]);
 
   // ticker 변경 시 모든 선택 초기화
   useEffect(() => {
     setSelectedBarTime(null);
     setSelectedEvent(null);
     setSelectedTimelineEvent(null);
-  }, [ticker, setSelectedBarTime, setSelectedEvent, setSelectedTimelineEvent]);
+    setSelectedAnomalyBar(null);
+  }, [ticker, setSelectedBarTime, setSelectedEvent, setSelectedTimelineEvent, setSelectedAnomalyBar]);
 
   // 마커 클릭 핸들러 — 최신 상태를 참조하도록 ref로 관리
   const clickHandlerRef = useRef<(params: MouseEventParams<Time>) => void>(() => {});
@@ -77,11 +81,12 @@ export default function NasdaqChart() {
 
       const clickedTime = String(params.time);
 
-      // 같은 봉 재클릭 시 선택 해제
+      // 같은 봉 재클릭 시 선택 해제 (인과 팝업도 닫음)
       if (selectedBarTime === clickedTime) {
         setSelectedBarTime(null);
         setSelectedEvent(null);
         setSelectedTimelineEvent(null);
+        setSelectedAnomalyBar(null);
         return;
       }
 
@@ -95,6 +100,34 @@ export default function NasdaqChart() {
           return diff < nearestDiff ? bar : nearest;
         }).time;
       };
+
+      // 이상치 봉 매칭 — ★ 마커 클릭 시 causality 팝업 오픈
+      if (anomalyBarsState.status === "SUCCESS" && bars.length > 0) {
+        const matchedAnomaly = anomalyBarsState.events.find(
+          (ev) => toNearestBarTime(ev.date) === clickedTime
+        );
+        if (matchedAnomaly) {
+          const effectiveTicker = ticker ?? "IXIC";
+          setSelectedAnomalyBar({ ticker: effectiveTicker, bar: matchedAnomaly });
+          setSelectedBarTime(clickedTime);
+          // 같은 봉에 History 이벤트도 있으면 함께 매칭 (타임라인 스크롤용)
+          if (timelineState.status === "SUCCESS") {
+            const matchedIdx = timelineState.events.findIndex(
+              (e) => toNearestBarTime(e.date) === clickedTime
+            );
+            setSelectedTimelineEvent(
+              matchedIdx !== -1
+                ? { idx: matchedIdx, event: timelineState.events[matchedIdx] }
+                : null,
+            );
+          }
+          setSelectedEvent(null);
+          return;
+        }
+      }
+
+      // 이상치 봉이 아니면 팝업은 닫혀있어야 함
+      setSelectedAnomalyBar(null);
 
       // History 이벤트 매칭 (1D일 때)
       if (timelineState.status === "SUCCESS" && timelineState.events.length > 0) {
@@ -125,7 +158,7 @@ export default function NasdaqChart() {
         setSelectedEvent(null);
       }
     };
-  }, [selectedBarTime, economicEventState, timelineState, nasdaqState, setSelectedBarTime, setSelectedEvent, setSelectedTimelineEvent]);
+  }, [selectedBarTime, economicEventState, timelineState, anomalyBarsState, nasdaqState, ticker, setSelectedBarTime, setSelectedEvent, setSelectedTimelineEvent, setSelectedAnomalyBar]);
 
   // 차트 초기화 + 캔들스틱 데이터 바인딩
   useEffect(() => {
