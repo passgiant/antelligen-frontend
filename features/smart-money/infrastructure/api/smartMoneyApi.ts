@@ -7,6 +7,8 @@ import type { InvestorFlowTrendResponse } from "@/features/smart-money/domain/mo
 import type { ConcentratedBuyingDays, ConcentratedBuyingItem } from "@/features/smart-money/domain/model/concentratedBuyingItem";
 import type { ConcentratedBuyingResponse } from "@/features/smart-money/domain/model/concentratedBuyingResponse";
 import type { PortfolioChangeType, GlobalPortfolioItem, GlobalInvestor } from "@/features/smart-money/domain/model/globalPortfolioItem";
+import type { USConcentratedBuyingItem } from "@/features/smart-money/domain/model/usConcentratedBuyingItem";
+import type { KrPortfolioItem, KrInvestor } from "@/features/smart-money/domain/model/krPortfolioItem";
 import type { GlobalPortfolioResponse, GlobalInvestorsResponse } from "@/features/smart-money/domain/model/globalPortfolioResponse";
 
 export async function fetchInvestorFlowRanking(investorType: InvestorType): Promise<InvestorFlowItem[]> {
@@ -89,6 +91,75 @@ export async function fetchGlobalInvestors(): Promise<GlobalInvestor[]> {
     `/api/v1/smart-money/investors`
   );
   return data.investors.map((name) => ({ id: name, name }));
+}
+
+export async function fetchKrInvestors(): Promise<KrInvestor[]> {
+  const { data } = await httpClient<ApiResponse<{ investors: Array<{ name: string; type: string }> }>>(
+    `/api/v1/smart-money/kr-investors`
+  );
+  return data.investors.map((i) => ({ name: i.name, type: i.type as KrInvestor["type"] }));
+}
+
+export async function fetchKrPortfolio(investorName: string): Promise<KrPortfolioItem[]> {
+  const { data } = await httpClient<ApiResponse<{
+    items: Array<{
+      investor_name: string;
+      investor_type: string;
+      stock_code: string;
+      stock_name: string;
+      shares_held: number;
+      ownership_ratio: number;
+      change_type: string;
+      reported_at: string | null;
+    }>;
+    total: number;
+  }>>(`/api/v1/smart-money/kr-portfolio?investor_name=${encodeURIComponent(investorName)}`);
+
+  return data.items.map((item) => ({
+    investorName: item.investor_name,
+    investorType: item.investor_type as KrPortfolioItem["investorType"],
+    stockCode: item.stock_code,
+    stockName: item.stock_name,
+    sharesHeld: item.shares_held,
+    ownershipRatio: item.ownership_ratio,
+    changeType: item.change_type as KrPortfolioItem["changeType"],
+    reportedAt: item.reported_at,
+  }));
+}
+
+export async function checkKrPortfolioHasData(): Promise<boolean> {
+  try {
+    const { data } = await httpClient<ApiResponse<{ total: number }>>(
+      `/api/v1/smart-money/kr-portfolio`
+    );
+    return data.total > 0;
+  } catch {
+    return false;
+  }
+}
+
+export async function triggerCollectKrPortfolio(): Promise<void> {
+  await httpClient<ApiResponse<unknown>>(`/api/v1/smart-money/kr-portfolio/collect`, { method: "POST" });
+}
+
+export async function fetchUSConcentratedBuying(limit: number = 20): Promise<USConcentratedBuyingItem[]> {
+  const { data } = await httpClient<ApiResponse<{ items: Array<{
+    ticker: string;
+    stock_name: string | null;
+    investor_count: number;
+    total_market_value: number;
+    investors: string[];
+    reported_at: string | null;
+  }>; total: number }>>(`/api/v1/smart-money/us-concentrated?limit=${limit}`);
+
+  return data.items.map((item) => ({
+    ticker: item.ticker,
+    stockName: item.stock_name,
+    investorCount: item.investor_count,
+    totalMarketValue: item.total_market_value,
+    investors: item.investors,
+    reportedAt: item.reported_at,
+  }));
 }
 
 export async function fetchGlobalPortfolio(
