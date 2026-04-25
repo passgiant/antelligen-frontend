@@ -9,9 +9,9 @@ interface EconomicEventsApiData {
   events: EconomicEvent[];
 }
 
-export async function fetchEconomicEvents(period: Period): Promise<EconomicEvent[]> {
+export async function fetchEconomicEvents(chartInterval: Period): Promise<EconomicEvent[]> {
   const res = await httpClient<ApiResponse<EconomicEventsApiData>>(
-    `/api/v1/dashboard/economic-events?period=${period}`
+    `/api/v1/dashboard/economic-events?chartInterval=${chartInterval}`
   );
   return res.data.events;
 }

@@ -25,9 +25,9 @@ export interface StockBarsResult {
   bars: NasdaqBar[];
 }
 
-export async function fetchStockBars(ticker: string, period: Period): Promise<StockBarsResult> {
+export async function fetchStockBars(ticker: string, chartInterval: Period): Promise<StockBarsResult> {
   const res = await httpClient<ApiResponse<StockBarsApiData>>(
-    `/api/v1/dashboard/stocks/${encodeURIComponent(ticker)}/bars?period=${period}`
+    `/api/v1/dashboard/stocks/${encodeURIComponent(ticker)}/bars?chartInterval=${chartInterval}`
   );
   return {
     companyName: res.data.company_name,

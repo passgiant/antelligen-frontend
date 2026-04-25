@@ -26,13 +26,12 @@ export interface AnomalyBarsResponse {
 
 export async function fetchAnomalyBars(
   ticker: string,
-  period: Period,
+  chartInterval: Period,
   signal?: AbortSignal,
 ): Promise<AnomalyBarsResponse> {
-  // backend 는 chart_interval + 레거시 period 양쪽 수용. 프론트 Period 값(1D/1W/1M/1Y)
-  // 을 그대로 전달하면 1Y → 1Q 별칭 처리는 백엔드에서 수행.
+  // ADR-0001: chartInterval 사용. 1Y → 1Q 별칭 처리는 백엔드에서 수행.
   const res = await httpClient<ApiResponse<AnomalyBarsResponse>>(
-    `/api/v1/history-agent/anomaly-bars?ticker=${encodeURIComponent(ticker)}&period=${period}`,
+    `/api/v1/history-agent/anomaly-bars?ticker=${encodeURIComponent(ticker)}&chartInterval=${chartInterval}`,
     { signal }
   );
   return res.data;

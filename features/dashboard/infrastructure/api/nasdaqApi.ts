@@ -18,9 +18,9 @@ interface NasdaqApiData {
   bars: NasdaqBarRaw[];
 }
 
-export async function fetchNasdaqBars(period: Period): Promise<NasdaqBar[]> {
+export async function fetchNasdaqBars(chartInterval: Period): Promise<NasdaqBar[]> {
   const res = await httpClient<ApiResponse<NasdaqApiData>>(
-    `/api/v1/dashboard/nasdaq?period=${period}`
+    `/api/v1/dashboard/nasdaq?chartInterval=${chartInterval}`
   );
   return res.data.bars.map((bar) => ({
     time: bar.bar_date,

@@ -7,12 +7,12 @@ import type { Period } from "@/features/dashboard/domain/model/period";
 
 export async function fetchTimeline(
   ticker: string,
-  period: Period,
+  chartInterval: Period,
   signal?: AbortSignal,
 ): Promise<TimelineResponse> {
   // §18.2: enrich_titles 파라미터 생략 — backend default(True)로 항상 LLM 타이틀.
   const res = await httpClient<ApiResponse<TimelineResponse>>(
-    `/api/v1/history-agent/timeline?ticker=${encodeURIComponent(ticker)}&period=${period}`,
+    `/api/v1/history-agent/timeline?ticker=${encodeURIComponent(ticker)}&chartInterval=${chartInterval}`,
     { signal }
   );
   return res.data;
@@ -20,13 +20,13 @@ export async function fetchTimeline(
 
 export function streamTimeline(
   ticker: string,
-  period: Period,
+  chartInterval: Period,
   onProgress: (progress: TimelineProgress) => void,
   signal?: AbortSignal,
 ): Promise<TimelineResponse> {
   return new Promise((resolve, reject) => {
     // §18.2: enrich_titles 생략 — backend default(True).
-    const url = `${env.apiBaseUrl}/api/v1/history-agent/timeline/stream?ticker=${encodeURIComponent(ticker)}&period=${period}`;
+    const url = `${env.apiBaseUrl}/api/v1/history-agent/timeline/stream?ticker=${encodeURIComponent(ticker)}&chartInterval=${chartInterval}`;
 
     fetch(url, {
       credentials: "include",
