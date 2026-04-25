@@ -169,14 +169,14 @@ export default function ScheduleCalendar({ events }: Props) {
 
               {hasEvents && (
                 <div
-                  className={`pointer-events-none invisible absolute top-full z-30 mt-2 w-72 rounded-xl border border-zinc-200 bg-white p-3 text-left opacity-0 shadow-xl transition-opacity group-hover:visible group-hover:opacity-100 dark:border-zinc-700 dark:bg-zinc-900 ${
+                  className={`pointer-events-none invisible absolute top-full z-30 mt-2 flex max-h-[70vh] w-72 flex-col rounded-xl border border-zinc-200 bg-white p-3 text-left opacity-0 shadow-xl transition-opacity before:absolute before:-top-2 before:left-0 before:right-0 before:h-2 before:content-[''] group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 dark:border-zinc-700 dark:bg-zinc-900 ${
                     popoverOnLeft ? "right-0" : "left-0"
                   }`}
                 >
-                  <p className="mb-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                  <p className="mb-2 shrink-0 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                     {formatKey(date)} · {dayEvents.length}건
                   </p>
-                  <ul className="space-y-2">
+                  <ul className="space-y-2 overflow-y-auto pr-1">
                     {dayEvents.map((ev) => (
                       <li key={ev.id} className="flex gap-2">
                         <span
