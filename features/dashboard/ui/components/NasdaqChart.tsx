@@ -15,7 +15,6 @@ import {
   type MouseEventParams,
 } from "lightweight-charts";
 import { nasdaqAtom } from "@/features/dashboard/application/atoms/nasdaqAtom";
-import { economicEventAtom, selectedEventAtom } from "@/features/dashboard/application/atoms/economicEventAtom";
 import { timelineAtom, selectedTimelineEventAtom } from "@/features/dashboard/application/atoms/timelineAtom";
 import { selectedBarTimeAtom } from "@/features/dashboard/application/atoms/selectedBarAtom";
 import { selectedAnomalyBarAtom } from "@/features/dashboard/application/atoms/selectedAnomalyBarAtom";
@@ -43,7 +42,6 @@ export default function NasdaqChart() {
   useAnomalyBars();
 
   const nasdaqState = useAtomValue(nasdaqAtom);
-  const economicEventState = useAtomValue(economicEventAtom);
   const timelineState = useAtomValue(timelineAtom);
   const anomalyBarsState = useAtomValue(anomalyBarsAtom);
   const selectedBarTime = useAtomValue(selectedBarTimeAtom);
@@ -53,25 +51,22 @@ export default function NasdaqChart() {
   const { setChartInterval } = useNasdaqChart();
   const setChartApi = useSetAtom(chartApiAtom);
   const setChartContainer = useSetAtom(chartContainerAtom);
-  const setSelectedEvent = useSetAtom(selectedEventAtom);
   const setSelectedTimelineEvent = useSetAtom(selectedTimelineEventAtom);
   const setSelectedBarTime = useSetAtom(selectedBarTimeAtom);
   const setSelectedAnomalyBar = useSetAtom(selectedAnomalyBarAtom);
 
-  // chartInterval 변경 시 경제지표 선택 초기화 (history 선택은 유지)
+  // chartInterval 변경 시 봉 선택 초기화 (history 선택은 유지)
   useEffect(() => {
     setSelectedBarTime(null);
-    setSelectedEvent(null);
     setSelectedAnomalyBar(null);
-  }, [chartInterval, setSelectedBarTime, setSelectedEvent, setSelectedAnomalyBar]);
+  }, [chartInterval, setSelectedBarTime, setSelectedAnomalyBar]);
 
   // ticker 변경 시 모든 선택 초기화
   useEffect(() => {
     setSelectedBarTime(null);
-    setSelectedEvent(null);
     setSelectedTimelineEvent(null);
     setSelectedAnomalyBar(null);
-  }, [ticker, setSelectedBarTime, setSelectedEvent, setSelectedTimelineEvent, setSelectedAnomalyBar]);
+  }, [ticker, setSelectedBarTime, setSelectedTimelineEvent, setSelectedAnomalyBar]);
 
   // 마커 클릭 핸들러 — 최신 상태를 참조하도록 ref로 관리
   const clickHandlerRef = useRef<(params: MouseEventParams<Time>) => void>(() => {});
@@ -84,7 +79,6 @@ export default function NasdaqChart() {
       // 같은 봉 재클릭 시 선택 해제 (인과 팝업도 닫음)
       if (selectedBarTime === clickedTime) {
         setSelectedBarTime(null);
-        setSelectedEvent(null);
         setSelectedTimelineEvent(null);
         setSelectedAnomalyBar(null);
         return;
@@ -121,7 +115,6 @@ export default function NasdaqChart() {
                 : null,
             );
           }
-          setSelectedEvent(null);
           return;
         }
       }
@@ -137,7 +130,6 @@ export default function NasdaqChart() {
         if (matchedIdx !== -1) {
           setSelectedTimelineEvent({ idx: matchedIdx, event: timelineState.events[matchedIdx] });
           setSelectedBarTime(clickedTime);
-          setSelectedEvent(null);
           return;
         }
         // 매칭되는 History 이벤트 없음 → 선택 해제
@@ -147,18 +139,8 @@ export default function NasdaqChart() {
       }
 
       setSelectedBarTime(clickedTime);
-
-      // 경제지표 이벤트 매칭
-      if (economicEventState.status === "SUCCESS") {
-        const matched = economicEventState.events.filter(
-          (e) => toNearestBarTime(e.date) === clickedTime
-        );
-        setSelectedEvent(matched.length > 0 ? matched[0] : null);
-      } else {
-        setSelectedEvent(null);
-      }
     };
-  }, [selectedBarTime, economicEventState, timelineState, anomalyBarsState, nasdaqState, ticker, setSelectedBarTime, setSelectedEvent, setSelectedTimelineEvent, setSelectedAnomalyBar]);
+  }, [selectedBarTime, timelineState, anomalyBarsState, nasdaqState, ticker, setSelectedBarTime, setSelectedTimelineEvent, setSelectedAnomalyBar]);
 
   // 차트 초기화 + 캔들스틱 데이터 바인딩
   useEffect(() => {

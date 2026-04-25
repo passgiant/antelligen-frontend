@@ -3,7 +3,6 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { timelineAtom, selectedTimelineEventAtom } from "@/features/dashboard/application/atoms/timelineAtom";
 import { selectedBarTimeAtom } from "@/features/dashboard/application/atoms/selectedBarAtom";
-import { economicEventAtom, selectedEventAtom } from "@/features/dashboard/application/atoms/economicEventAtom";
 import { nasdaqAtom } from "@/features/dashboard/application/atoms/nasdaqAtom";
 import { chartIntervalAtom } from "@/features/dashboard/application/atoms/chartIntervalAtom";
 import { useTimeline } from "@/features/dashboard/application/hooks/useTimeline";
@@ -68,10 +67,8 @@ export default function HistoryPanel() {
   const lazyPeriod = timelineState.status === "SUCCESS" ? timelineState.period : "";
   const { getCardRef } = useLazyTitles({ events: lazyEvents, ticker: lazyTicker, chartInterval: lazyPeriod });
   const nasdaqState = useAtomValue(nasdaqAtom);
-  const economicEventState = useAtomValue(economicEventAtom);
   const [selectedTimelineEvent, setSelectedTimelineEvent] = useAtom(selectedTimelineEventAtom);
   const setSelectedBarTime = useSetAtom(selectedBarTimeAtom);
-  const setSelectedEvent = useSetAtom(selectedEventAtom);
   const chartInterval = useAtomValue(chartIntervalAtom);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("ALL");
 
@@ -143,15 +140,6 @@ export default function HistoryPanel() {
     setSelectedTimelineEvent({ idx, event });
     // §18.1: 봉 단위(chartInterval) 강제 전환 제거 — 사용자가 보고 있던 주/월/분기봉 뷰 유지.
     // 선택된 이벤트에 대응하는 봉(selectedBarTime)은 현재 봉 단위 기준으로 근접 탐색.
-
-    // 날짜가 일치하는 경제 지표 이벤트 자동 선택
-    if (economicEventState.status === "SUCCESS") {
-      const eventMonth = event.date.slice(0, 7); // "yyyy-MM"
-      const matched = economicEventState.events.find((e) => e.date.slice(0, 7) === eventMonth) ?? null;
-      setSelectedEvent(matched);
-    } else {
-      setSelectedEvent(null);
-    }
 
     if (nasdaqState.status === "SUCCESS" && nasdaqState.bars.length > 0) {
       const eventTs = new Date(event.date).getTime();

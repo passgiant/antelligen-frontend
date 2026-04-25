@@ -2,11 +2,11 @@
 
 import { useRef } from "react";
 import NasdaqChart from "@/features/dashboard/ui/components/NasdaqChart";
-import EventTimeline from "@/features/dashboard/ui/components/EventTimeline";
 import ConnectorOverlay from "@/features/dashboard/ui/components/ConnectorOverlay";
 import HistoryPanel from "@/features/dashboard/ui/components/HistoryPanel";
 import StockSearch from "@/features/dashboard/ui/components/StockSearch";
 import AnomalyCausalityPopup from "@/features/dashboard/ui/components/AnomalyCausalityPopup";
+import AssetProfilePanel from "@/features/company-profile/ui/components/AssetProfilePanel";
 
 export default function DashboardLayout() {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -25,10 +25,10 @@ export default function DashboardLayout() {
             <HistoryPanel />
           </div>
 
-          {/* 우측: 종목 조회 + 주요 경제 지표 */}
+          {/* 우측: 종목 조회 + 종목 프로필 */}
           <div className="flex flex-col gap-4">
             <StockSearch />
-            <EventTimeline />
+            <AssetProfilePanel />
           </div>
         </div>
 

@@ -1,3 +1,11 @@
+export type AssetType = "EQUITY" | "INDEX" | "ETF";
+
+export type OverviewSource =
+  | "rag_summary"
+  | "llm_only"
+  | "asset_llm_only"
+  | null;
+
 export interface CompanyProfile {
   corp_code: string;
   corp_name: string;
@@ -17,7 +25,10 @@ export interface CompanyProfile {
   induty_code: string | null;
   est_dt: string | null;
   acc_mt: string | null;
+  asset_type: AssetType;
   business_summary: string | null;
   main_revenue_sources: string[];
-  overview_source: string | null;
+  overview_source: OverviewSource;
+  founding_story: string | null;
+  business_model: string | null;
 }
