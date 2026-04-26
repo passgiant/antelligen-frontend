@@ -13,7 +13,7 @@ export function useTimeline() {
   const setTimeline = useSetAtom(timelineAtom);
 
   useEffect(() => {
-    const effectiveTicker = ticker ?? "IXIC";
+    const effectiveTicker = ticker ?? "NVDA";
 
     setTimeline({ status: "LOADING" });
 

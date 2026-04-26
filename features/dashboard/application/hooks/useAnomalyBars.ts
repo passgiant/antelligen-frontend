@@ -13,7 +13,7 @@ export function useAnomalyBars() {
   const setState = useSetAtom(anomalyBarsAtom);
 
   useEffect(() => {
-    const effectiveTicker = ticker ?? "IXIC";
+    const effectiveTicker = ticker ?? "NVDA";
     setState({ status: "LOADING" });
 
     const controller = new AbortController();

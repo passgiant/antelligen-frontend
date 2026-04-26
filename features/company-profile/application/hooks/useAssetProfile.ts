@@ -7,7 +7,7 @@ import { assetProfileAtom } from "@/features/company-profile/application/atoms/a
 import { fetchCompanyProfile } from "@/features/company-profile/infrastructure/api/companyProfileApi";
 import { HttpError } from "@/infrastructure/http/httpClient";
 
-const FALLBACK_TICKER = "IXIC";
+const FALLBACK_TICKER = "NVDA";
 
 export function useAssetProfile() {
   const ticker = useAtomValue(tickerAtom);

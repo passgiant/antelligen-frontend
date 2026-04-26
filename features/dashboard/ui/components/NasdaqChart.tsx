@@ -101,7 +101,7 @@ export default function NasdaqChart() {
           (ev) => toNearestBarTime(ev.date) === clickedTime
         );
         if (matchedAnomaly) {
-          const effectiveTicker = ticker ?? "IXIC";
+          const effectiveTicker = ticker ?? "NVDA";
           setSelectedAnomalyBar({ ticker: effectiveTicker, bar: matchedAnomaly });
           setSelectedBarTime(clickedTime);
           // 같은 봉에 History 이벤트도 있으면 함께 매칭 (타임라인 스크롤용)
@@ -296,10 +296,10 @@ export default function NasdaqChart() {
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-baseline gap-2">
           <span className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
-            {ticker ?? "IXIC"}
+            {ticker ?? "NVDA"}
           </span>
           <span className="text-xs text-zinc-400">
-            {companyName ?? "NASDAQ Composite"}
+            {companyName ?? "NVIDIA Corporation"}
           </span>
         </div>
         <ChartIntervalTabs selected={chartInterval} onChange={setChartInterval} />
