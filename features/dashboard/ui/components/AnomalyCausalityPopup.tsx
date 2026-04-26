@@ -5,6 +5,37 @@ import { useAtom, useAtomValue } from "jotai";
 import { selectedAnomalyBarAtom } from "@/features/dashboard/application/atoms/selectedAnomalyBarAtom";
 import { anomalyCausalityAtom } from "@/features/dashboard/application/atoms/anomalyCausalityAtom";
 import { useAnomalyCausality } from "@/features/dashboard/application/hooks/useAnomalyCausality";
+import type {
+  HypothesisConfidence,
+  HypothesisLayer,
+  HypothesisResult,
+} from "@/features/dashboard/domain/model/timelineEvent";
+
+const CONFIDENCE_LABEL: Record<HypothesisConfidence, string> = {
+  HIGH: "신뢰도 상",
+  MEDIUM: "신뢰도 중",
+  LOW: "신뢰도 하",
+};
+
+const CONFIDENCE_BADGE: Record<HypothesisConfidence, string> = {
+  HIGH: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  MEDIUM: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  LOW: "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400",
+};
+
+const LAYER_LABEL: Record<HypothesisLayer, string> = {
+  DIRECT: "직접",
+  SUPPORTING: "보조",
+  MARKET: "시장",
+};
+
+function getConfidence(h: HypothesisResult): HypothesisConfidence {
+  return h.confidence ?? "LOW";
+}
+
+function getLayer(h: HypothesisResult): HypothesisLayer {
+  return h.layer ?? "SUPPORTING";
+}
 
 export default function AnomalyCausalityPopup() {
   const [selected, setSelected] = useAtom(selectedAnomalyBarAtom);
@@ -127,25 +158,81 @@ export default function AnomalyCausalityPopup() {
 
           {state.status === "SUCCESS" && state.hypotheses.length > 0 && (
             <ul className="space-y-2">
-              {state.hypotheses.map((h, i) => (
-                <li key={i} className="rounded-lg bg-purple-500/5 p-3">
-                  <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-200">
-                    {h.hypothesis}
-                  </p>
-                  {h.supporting_tools_called.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {h.supporting_tools_called.map((tool) => (
-                        <span
-                          key={tool}
-                          className="rounded-full bg-purple-500/10 px-1.5 py-0.5 text-[10px] text-purple-500"
-                        >
-                          {tool}
-                        </span>
-                      ))}
+              {state.hypotheses.map((h, i) => {
+                const confidence = getConfidence(h);
+                const layer = getLayer(h);
+                const isLow = confidence === "LOW";
+                const sources = h.sources ?? [];
+                // KR5: 신뢰도 "낮음" → 카드 전체 회색 처리. HIGH/MEDIUM 만 보라색 강조.
+                const cardBg = isLow ? "bg-zinc-500/5" : "bg-purple-500/5";
+                const bodyColor = isLow
+                  ? "text-zinc-500 dark:text-zinc-400"
+                  : "text-zinc-700 dark:text-zinc-200";
+                return (
+                  <li key={i} className={`rounded-lg p-3 ${cardBg}`}>
+                    {/* 신뢰도 + 계층 라벨 라인 */}
+                    <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${CONFIDENCE_BADGE[confidence]}`}
+                      >
+                        {isLow ? "⚠ " : ""}
+                        {CONFIDENCE_LABEL[confidence]}
+                      </span>
+                      <span className="rounded-full bg-zinc-200/60 px-2 py-0.5 text-[10px] text-zinc-600 dark:bg-zinc-700/60 dark:text-zinc-300">
+                        {LAYER_LABEL[layer]}
+                      </span>
                     </div>
-                  )}
-                </li>
-              ))}
+
+                    <p className={`text-sm leading-relaxed ${bodyColor}`}>
+                      {h.hypothesis}
+                    </p>
+
+                    {h.evidence && (
+                      <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                        근거: {h.evidence}
+                      </p>
+                    )}
+
+                    {sources.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {sources.map((s, j) =>
+                          s.url ? (
+                            <a
+                              key={j}
+                              href={s.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-500/20 dark:text-blue-400"
+                            >
+                              {s.label} ↗
+                            </a>
+                          ) : (
+                            <span
+                              key={j}
+                              className="rounded-full bg-zinc-200/60 px-2 py-0.5 text-[10px] text-zinc-600 dark:bg-zinc-700/60 dark:text-zinc-300"
+                            >
+                              {s.label}
+                            </span>
+                          ),
+                        )}
+                      </div>
+                    )}
+
+                    {h.supporting_tools_called.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {h.supporting_tools_called.map((tool) => (
+                          <span
+                            key={tool}
+                            className="rounded-full bg-purple-500/10 px-1.5 py-0.5 text-[10px] text-purple-500"
+                          >
+                            {tool}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
