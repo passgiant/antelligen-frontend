@@ -107,7 +107,7 @@ export default function AnomalyCausalityPopup() {
           </button>
         </div>
 
-        {/* Summary 그리드 */}
+        {/* Summary 그리드 — KR4 기본 카드: 방향 / 수익률(+갭·장중) / 거래량 배수 */}
         <div className="grid grid-cols-3 gap-3 bg-zinc-50 px-6 py-3 dark:bg-zinc-800/50">
           <div>
             <div className="text-[10px] uppercase tracking-wide text-zinc-400">방향</div>
@@ -115,15 +115,32 @@ export default function AnomalyCausalityPopup() {
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-wide text-zinc-400">수익률</div>
-            <div className={`text-sm font-semibold ${directionColor}`}>
-              {returnSign}
-              {bar.return_pct.toFixed(2)}%
+            <div className={`flex items-center gap-1.5 text-sm font-semibold ${directionColor}`}>
+              <span>
+                {returnSign}
+                {bar.return_pct.toFixed(2)}%
+              </span>
+              {bar.time_of_day && (
+                <span
+                  className="rounded-full bg-zinc-200/60 px-1.5 py-0.5 text-[9px] font-medium text-zinc-600 dark:bg-zinc-700/60 dark:text-zinc-300"
+                  title={
+                    bar.time_of_day === "GAP"
+                      ? "갭(시초가 변동) 비중 우세 — 일봉 OHLC 근사"
+                      : "장중 변동 비중 우세 — 일봉 OHLC 근사"
+                  }
+                >
+                  {bar.time_of_day === "GAP" ? "갭" : "장중"}
+                </span>
+              )}
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-zinc-400">Z-score</div>
-            <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-              {bar.z_score.toFixed(2)}
+            <div className="text-[10px] uppercase tracking-wide text-zinc-400">거래량 배수</div>
+            <div
+              className="text-sm font-semibold text-zinc-800 dark:text-zinc-100"
+              title={`Z-score ${bar.z_score.toFixed(2)} · 평균 거래량 대비 배수`}
+            >
+              {bar.volume_ratio != null ? `×${bar.volume_ratio.toFixed(2)}` : "—"}
             </div>
           </div>
         </div>

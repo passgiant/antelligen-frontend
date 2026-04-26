@@ -7,6 +7,8 @@ import type { ChartInterval } from "@/features/dashboard/domain/model/chartInter
  * - return_pct: 해당 봉의 수익률(%) — 직전 봉 대비.
  * - z_score: (return_pct/100 - μ) / σ, 봉 단위별 rolling window 기준.
  * - direction: "up" | "down" — 프론트 색 구분용 (한국식 up=빨강 / down=파랑).
+ * - volume_ratio: σ window 평균 거래량 대비 배수. window 부족/평균 0 시 null.
+ * - time_of_day: 일봉(1D) 한정 갭/장중 근사. "GAP" | "INTRADAY". 그 외 null.
  */
 export interface AnomalyBar {
   date: string; // ISO "yyyy-mm-dd"
@@ -14,6 +16,8 @@ export interface AnomalyBar {
   z_score: number;
   direction: "up" | "down";
   close: number;
+  volume_ratio?: number | null;
+  time_of_day?: "GAP" | "INTRADAY" | null;
   causality: string | null;
 }
 
