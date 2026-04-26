@@ -1,8 +1,24 @@
 export type TimelineCategory = "CORPORATE" | "ANNOUNCEMENT" | "MACRO";
 
+// KR2-(3) 신뢰도 등급. 누락/이상치는 "LOW" 로 다운그레이드해 KR5 회색 처리 트리거.
+export type HypothesisConfidence = "HIGH" | "MEDIUM" | "LOW";
+
+// KR2-(2) 추정 원인 계층. 누락은 "SUPPORTING" 으로 fallback.
+export type HypothesisLayer = "DIRECT" | "SUPPORTING" | "MARKET";
+
+export interface HypothesisSource {
+  label: string;
+  url?: string | null;
+}
+
 export interface HypothesisResult {
   hypothesis: string;
   supporting_tools_called: string[];
+  // 백엔드 v2 스키마(KR2 확장). 옛 응답에서는 누락 가능 — UI 에서 default fallback.
+  confidence?: HypothesisConfidence;
+  layer?: HypothesisLayer;
+  sources?: HypothesisSource[];
+  evidence?: string | null;
 }
 
 export interface TimelineEvent {
