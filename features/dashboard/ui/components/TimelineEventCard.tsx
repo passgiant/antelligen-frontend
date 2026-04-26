@@ -10,6 +10,14 @@ import {
   getTimelineColor,
   getTimelineSizeTokens,
 } from "@/features/dashboard/domain/model/timelineEventTheme";
+import ARBadge from "@/features/dashboard/ui/components/ARBadge";
+
+const AR_STATUS_LABEL: Record<string, string> = {
+  INSUFFICIENT_DATA: "거래일 부족",
+  BENCHMARK_MISSING: "벤치마크 없음",
+  BENCHMARK_DATA_MISSING: "벤치마크 데이터 없음",
+  STOCK_DATA_MISSING: "종목 데이터 없음",
+};
 
 type CategoryStyle = { bg: string; text: string; label: string };
 
@@ -134,7 +142,7 @@ export default function TimelineEventCard({ event, eventIdx, isLast = false, isS
           </p>
         )}
 
-        {/* expand 영역: detail / source / causality */}
+        {/* expand 영역: detail / source / AR / causality */}
         {isExpanded && (
           <div className="mt-2 space-y-2">
             <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
@@ -151,6 +159,24 @@ export default function TimelineEventCard({ event, eventIdx, isLast = false, isS
               >
                 {event.source ?? "출처 보기"}
               </a>
+            )}
+
+            {/* PR3 — Abnormal return: status="OK" 면 배지 노출, 그 외 status 만 회색 라벨 */}
+            {event.ar_status === "OK" &&
+              (event.abnormal_return_5d != null || event.abnormal_return_20d != null) && (
+                <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  <span>
+                    이벤트 후 누적 초과 수익률
+                    {event.benchmark_ticker ? ` (vs ${event.benchmark_ticker})` : ""}
+                  </span>
+                  <ARBadge value={event.abnormal_return_5d} windowLabel="5d" />
+                  <ARBadge value={event.abnormal_return_20d} windowLabel="20d" />
+                </div>
+              )}
+            {event.ar_status && event.ar_status !== "OK" && (
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-500">
+                초과 수익률: {AR_STATUS_LABEL[event.ar_status] ?? event.ar_status}
+              </p>
             )}
 
             {event.causality && event.causality.length > 0 && (

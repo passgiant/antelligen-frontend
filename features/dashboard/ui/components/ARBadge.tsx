@@ -1,0 +1,36 @@
+"use client";
+
+interface Props {
+  /** 누적 abnormal return (%, 종목 - 벤치마크). null/undefined 면 미표시. */
+  value?: number | null;
+  /** "5d" | "20d" 등 윈도우 라벨. */
+  windowLabel?: string;
+}
+
+/** AR 표시 배지. 양수=초록, 음수=빨강, |ar|≥5% 이면 굵게. 0 근방은 zinc. */
+export default function ARBadge({ value, windowLabel = "5d" }: Props) {
+  if (value == null || Number.isNaN(value)) return null;
+
+  const sign = value > 0 ? "+" : "";
+  const isStrong = Math.abs(value) >= 5;
+  const tone =
+    value > 0.001
+      ? "text-emerald-600 dark:text-emerald-400"
+      : value < -0.001
+      ? "text-rose-600 dark:text-rose-400"
+      : "text-zinc-500 dark:text-zinc-400";
+  const weight = isStrong ? "font-bold" : "font-semibold";
+
+  return (
+    <span
+      className={`inline-flex items-baseline gap-1 rounded-md px-1.5 py-0.5 text-xs ${tone} ${weight}`}
+      title={`±${windowLabel} 누적 초과 수익률 ${sign}${value.toFixed(2)}%`}
+    >
+      <span className="text-[10px] font-normal text-zinc-400 dark:text-zinc-500">
+        {windowLabel}
+      </span>
+      {sign}
+      {value.toFixed(2)}%
+    </span>
+  );
+}

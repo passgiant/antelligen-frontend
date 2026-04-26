@@ -25,6 +25,14 @@ export interface TimelineEvent {
   classifier_version?: string | null;
   // SEC 8-K raw Item 코드(예: "1.01,9.01"). DART는 null.
   items_str?: string | null;
+  // PR3 — 이벤트 ±N거래일 abnormal return (= R_stock - R_benchmark, %).
+  // status="OK" 인 행만 값 노출. 그 외는 ar_status 만 채워짐.
+  abnormal_return_5d?: number | null;
+  abnormal_return_20d?: number | null;
+  // "OK" | "INSUFFICIENT_DATA" | "BENCHMARK_MISSING" | "BENCHMARK_DATA_MISSING" | "STOCK_DATA_MISSING"
+  ar_status?: string | null;
+  // 매핑된 시장 벤치마크(^GSPC | ^KS11 등). status != BENCHMARK_MISSING 일 때만 채워짐.
+  benchmark_ticker?: string | null;
 }
 
 export interface TimelineResponse {
