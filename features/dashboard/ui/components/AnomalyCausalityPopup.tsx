@@ -187,6 +187,20 @@ export default function AnomalyCausalityPopup() {
                     </>
                   );
                 }
+                if (t === "volatility_cluster") {
+                  return (
+                    <>
+                      <span className="mr-1.5">⚡</span>
+                      변동성 클러스터 분석
+                      {bar.cluster_size != null && (
+                        <span className="ml-2 text-xs font-normal text-zinc-500 dark:text-zinc-400">
+                          ({bar.cluster_size}건
+                          {bar.cluster_end_date ? ` · ~${bar.cluster_end_date}` : ""})
+                        </span>
+                      )}
+                    </>
+                  );
+                }
                 return (
                   <>
                     <span className="mr-1.5 text-yellow-500">★</span>
