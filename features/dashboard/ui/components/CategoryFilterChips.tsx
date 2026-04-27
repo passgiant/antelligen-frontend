@@ -11,6 +11,13 @@ const FILTER_ORDER: CategoryFilter[] = [
   "MACRO",
 ];
 
+// 자산 타입별 노출 카테고리. 정의된 자산 타입은 해당 카테고리만 노출.
+// 정의되지 않은 자산 타입(MUTUALFUND/CRYPTO 등)이나 unknown은 FILTER_ORDER 전체.
+const VISIBLE_BY_ASSET: Record<string, CategoryFilter[]> = {
+  EQUITY: ["ALL", "CORPORATE", "ANNOUNCEMENT"],
+  INDEX: ["ALL", "MACRO"],
+};
+
 const LABEL: Record<CategoryFilter, string> = {
   ALL: "전체",
   CORPORATE: "기업",
@@ -29,12 +36,14 @@ interface Props {
   selected: CategoryFilter;
   onChange: (value: CategoryFilter) => void;
   counts?: Partial<Record<CategoryFilter, number>>;
+  assetType?: string;
 }
 
-export default function CategoryFilterChips({ selected, onChange, counts }: Props) {
+export default function CategoryFilterChips({ selected, onChange, counts, assetType }: Props) {
+  const visible: CategoryFilter[] = (assetType ? VISIBLE_BY_ASSET[assetType] : undefined) ?? FILTER_ORDER;
   return (
     <div className="mb-3 flex flex-wrap gap-1.5">
-      {FILTER_ORDER.map((key) => {
+      {visible.map((key) => {
         const isActive = selected === key;
         const count = counts?.[key];
         return (

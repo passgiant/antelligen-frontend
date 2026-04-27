@@ -10,6 +10,6 @@ export type TimelineState =
   | { status: "IDLE" }
   | { status: "LOADING" }
   | { status: "LOADING_WITH_PROGRESS"; progress: TimelineProgress }
-  | { status: "SUCCESS"; events: TimelineEvent[]; ticker: string; period: string }
+  | { status: "SUCCESS"; events: TimelineEvent[]; ticker: string; period: string; assetType?: string }
   | { status: "ETF"; ticker: string; period: string }
   | { status: "ERROR"; message: string };

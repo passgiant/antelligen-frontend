@@ -5,6 +5,7 @@ import { timelineAtom, selectedTimelineEventAtom } from "@/features/dashboard/ap
 import { selectedBarTimeAtom } from "@/features/dashboard/application/atoms/selectedBarAtom";
 import { nasdaqAtom } from "@/features/dashboard/application/atoms/nasdaqAtom";
 import { chartIntervalAtom } from "@/features/dashboard/application/atoms/chartIntervalAtom";
+import { tickerAtom } from "@/features/dashboard/application/atoms/tickerAtom";
 import { resetExpandedTimelineEventsAtom } from "@/features/dashboard/application/atoms/expandedTimelineAtom";
 import { useTimeline } from "@/features/dashboard/application/hooks/useTimeline";
 import LazyTimelineEventCard from "@/features/history/ui/components/LazyTimelineEventCard";
@@ -70,27 +71,42 @@ export default function HistoryPanel() {
   );
   const lazyTicker = timelineState.status === "SUCCESS" ? timelineState.ticker : "";
   const lazyPeriod = timelineState.status === "SUCCESS" ? timelineState.period : "";
+  const lazyAssetType = timelineState.status === "SUCCESS" ? timelineState.assetType : undefined;
   const { getCardRef } = useLazyTitles({ events: lazyEvents, ticker: lazyTicker, chartInterval: lazyPeriod });
   const nasdaqState = useAtomValue(nasdaqAtom);
   const [selectedTimelineEvent, setSelectedTimelineEvent] = useAtom(selectedTimelineEventAtom);
   const setSelectedBarTime = useSetAtom(selectedBarTimeAtom);
   const chartInterval = useAtomValue(chartIntervalAtom);
+  const ticker = useAtomValue(tickerAtom);
   const resetExpandedEvents = useSetAtom(resetExpandedTimelineEventsAtom);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("ALL");
   const [importanceFilter, setImportanceFilter] = useState<ImportanceFilterState>(
     DEFAULT_IMPORTANCE_FILTER,
   );
 
+  // 자산 타입별 부적합 카테고리는 ALL 탭에서도 제외.
+  // EQUITY: MACRO 노출 안 함 / INDEX: CORPORATE/ANNOUNCEMENT 노출 안 함.
+  // 미정의 자산 타입은 그대로 통과(보수적 fallback).
+  const assetEligibleEvents = useMemo(() => {
+    if (lazyAssetType === "EQUITY") {
+      return lazyEvents.filter((ev) => ev.category !== "MACRO");
+    }
+    if (lazyAssetType === "INDEX") {
+      return lazyEvents.filter((ev) => ev.category === "MACRO");
+    }
+    return lazyEvents;
+  }, [lazyEvents, lazyAssetType]);
+
   const categoryCounts = useMemo(() => {
-    const counts: Partial<Record<CategoryFilter, number>> = { ALL: lazyEvents.length };
-    for (const ev of lazyEvents) {
+    const counts: Partial<Record<CategoryFilter, number>> = { ALL: assetEligibleEvents.length };
+    for (const ev of assetEligibleEvents) {
       counts[ev.category] = (counts[ev.category] ?? 0) + 1;
     }
     return counts;
-  }, [lazyEvents]);
+  }, [assetEligibleEvents]);
 
   const visibleEvents = useMemo(() => {
-    let filtered = lazyEvents;
+    let filtered = assetEligibleEvents;
 
     // 카테고리 필터
     if (categoryFilter !== "ALL") {
@@ -108,7 +124,7 @@ export default function HistoryPanel() {
     });
 
     return filtered;
-  }, [lazyEvents, categoryFilter, importanceFilter]);
+  }, [assetEligibleEvents, categoryFilter, importanceFilter]);
 
   // 봉 단위(chartInterval) 변경 시 선택 초기화 — 봉 단위가 바뀌면 근접 봉 좌표가 달라지므로
   // 이전 선택을 유지하면 SVG 연결선이 엉뚱한 봉을 가리킬 수 있다.
@@ -119,6 +135,12 @@ export default function HistoryPanel() {
     resetExpandedEvents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chartInterval]);
+
+  // ticker 변경 시 categoryFilter "ALL"로 reset — 자산 타입이 바뀌면
+  // 이전에 선택했던 카테고리(예: EQUITY MACRO 미노출)가 invisible 상태로 잔존할 수 있다.
+  useEffect(() => {
+    setCategoryFilter("ALL");
+  }, [ticker]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -223,6 +245,7 @@ export default function HistoryPanel() {
             selected={categoryFilter}
             onChange={setCategoryFilter}
             counts={categoryCounts}
+            assetType={lazyAssetType}
           />
           <ImportanceFilter value={importanceFilter} onChange={setImportanceFilter} />
           {visibleEvents.length === 0 ? (

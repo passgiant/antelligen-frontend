@@ -43,6 +43,7 @@ export function useTimeline() {
           events: data.events,
           ticker: data.ticker,
           period: interval,
+          assetType: data.asset_type,
         });
       })
       .catch((err) => {
