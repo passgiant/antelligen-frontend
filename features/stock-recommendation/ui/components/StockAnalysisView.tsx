@@ -14,6 +14,7 @@ import AnalysisInputForm from "@/features/stock-recommendation/ui/components/Ana
 import AnalysisLoadingSteps from "@/features/stock-recommendation/ui/components/AnalysisLoadingSteps";
 import AnalysisResultHeader from "@/features/stock-recommendation/ui/components/AnalysisResultHeader";
 import AgentCard from "@/features/stock-recommendation/ui/components/AgentCard";
+import BusinessOverviewCard from "@/features/stock-recommendation/ui/components/BusinessOverviewCard";
 import HistoryTimeline from "@/features/stock-recommendation/ui/components/HistoryTimeline";
 
 export default function StockAnalysisView() {
@@ -88,6 +89,9 @@ export default function StockAnalysisView() {
             overallSignal={overallSignal}
             overallConfidence={overallConfidence}
           />
+          {result.businessOverview && (
+            <BusinessOverviewCard overview={result.businessOverview} />
+          )}
           <HistoryTimeline history={history} />
         </div>
 

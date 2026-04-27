@@ -43,12 +43,22 @@ export interface AgentResult {
   errorMessage: string | null;
 }
 
+export interface BusinessOverview {
+  corpName: string;
+  summary: string;
+  revenueSources: string[];
+  source: "rag_summary" | "llm_only" | "asset_llm_only" | string;
+  foundingStory: string | null;
+  businessModel: string | null;
+}
+
 export interface StockAnalysisResult {
   sessionId: string;
   resultStatus: "success" | "partial_failure" | "failure";
   answer: string;
   agentResults: AgentResult[];
   totalExecutionTimeMs: number;
+  businessOverview: BusinessOverview | null;
 }
 
 export interface StockAnalysisRequest {

@@ -5,6 +5,7 @@ import type {
   AgentResult,
   AgentSignal,
   AnalysisHistoryItem,
+  BusinessOverview,
   DisclosureData,
   FinanceData,
   StockAnalysisRequest,
@@ -55,12 +56,22 @@ interface RawAgentResult {
   error_message: string | null;
 }
 
+interface RawBusinessOverview {
+  corp_name: string;
+  summary: string;
+  revenue_sources: string[];
+  source: string;
+  founding_story: string | null;
+  business_model: string | null;
+}
+
 interface RawQueryResponse {
   session_id: string;
   result_status: "success" | "partial_failure" | "failure";
   answer: string;
   agent_results: RawAgentResult[];
   total_execution_time_ms: number;
+  business_overview: RawBusinessOverview | null;
 }
 
 interface RawHistoryItem {
@@ -103,6 +114,20 @@ function mapDisclosureData(raw: RawDisclosureData | null | undefined): Disclosur
       unknown: raw?.filings?.other_summary?.unknown ?? 0,
       majorEvent: raw?.filings?.other_summary?.major_event ?? 0,
     },
+  };
+}
+
+function mapBusinessOverview(
+  raw: RawBusinessOverview | null | undefined
+): BusinessOverview | null {
+  if (!raw) return null;
+  return {
+    corpName: raw.corp_name,
+    summary: raw.summary,
+    revenueSources: raw.revenue_sources ?? [],
+    source: raw.source,
+    foundingStory: raw.founding_story ?? null,
+    businessModel: raw.business_model ?? null,
   };
 }
 
@@ -153,6 +178,7 @@ export async function queryStockAnalysis(
     answer: raw.answer,
     agentResults: raw.agent_results.map(mapAgentResult),
     totalExecutionTimeMs: raw.total_execution_time_ms,
+    businessOverview: mapBusinessOverview(raw.business_overview),
   };
 }
 
