@@ -195,13 +195,19 @@ export default function NasdaqChart() {
       wickDownColor: "#3b82f6",
     });
 
-    const data: CandlestickData<Time>[] = nasdaqState.bars.map((bar) => ({
-      time: bar.time as Time,
-      open: bar.open,
-      high: bar.high,
-      low: bar.low,
-      close: bar.close,
-    }));
+    // 일부 한국 종목(005930.KS 등) 에서 yfinance 가 휴장일/누락 봉을 null OHLC 로 반환 →
+    // lightweight-charts 가 candlestick value 를 number 로 강제하므로 사전 필터.
+    const data: CandlestickData<Time>[] = nasdaqState.bars
+      .filter((bar) =>
+        bar.open != null && bar.high != null && bar.low != null && bar.close != null
+      )
+      .map((bar) => ({
+        time: bar.time as Time,
+        open: bar.open,
+        high: bar.high,
+        low: bar.low,
+        close: bar.close,
+      }));
 
     series.setData(data);
     chart.timeScale().fitContent();
