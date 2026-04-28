@@ -7,18 +7,22 @@ interface Props {
   windowLabel?: string;
 }
 
+// toFixed(2) 가 "0.00" 으로 반올림하는 경계와 일치 — 표시-색상 일관성.
+const ZERO_NEAR_THRESHOLD = 0.005;
+const STRONG_THRESHOLD = 5;
+
 /** AR 표시 배지. 양수=초록, 음수=빨강, |ar|≥5% 이면 굵게. 0 근방은 zinc. */
 export default function ARBadge({ value, windowLabel = "5d" }: Props) {
   if (value == null || Number.isNaN(value)) return null;
 
   const sign = value > 0 ? "+" : "";
-  const isStrong = Math.abs(value) >= 5;
-  const tone =
-    value > 0.001
-      ? "text-emerald-600 dark:text-emerald-400"
-      : value < -0.001
-      ? "text-rose-600 dark:text-rose-400"
-      : "text-zinc-500 dark:text-zinc-400";
+  const isStrong = Math.abs(value) >= STRONG_THRESHOLD;
+  const isZeroNear = Math.abs(value) < ZERO_NEAR_THRESHOLD;
+  const tone = isZeroNear
+    ? "text-zinc-500 dark:text-zinc-400"
+    : value > 0
+    ? "text-emerald-600 dark:text-emerald-400"
+    : "text-rose-600 dark:text-rose-400";
   const weight = isStrong ? "font-bold" : "font-semibold";
 
   return (
